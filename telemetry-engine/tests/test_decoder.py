@@ -24,7 +24,7 @@ def test_decoder_basic():
     struct.pack_into('<f', packet, DISTANCE_OFFSET, 1000.0)
     
     # Décodage
-    sample = GT7Decoder.decode(bytes(packet))
+    sample = GT7Decoder.decode(bytes(packet), encrypted=False)
     
     # Vérifications
     assert isinstance(sample, TelemetrySample)

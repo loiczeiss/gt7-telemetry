@@ -1,10 +1,10 @@
-# GT7 Telemetry Engine - Étape 2 : Session Management
+# GT7 Telemetry Engine - Étape 3 : Heartbeat + capture PS5
 
 Moteur d'analyse télémétrique pour Gran Turismo 7 sur PS5.
 
 ## Structure du projet
 
-- `collector/` : Réception (UDP) et simulation de données.
+- `collector/` : Réception UDP, heartbeat, déchiffrement Salsa20, simulation.
 - `models/` : Modèles de données Pydantic (Session, Lap, TelemetrySample).
 - `session/` : Logique métier (détection de tours, validation, gestion de session).
 - `storage/` : Gestion de la persistance (SQLite relationnel).
@@ -21,16 +21,29 @@ Moteur d'analyse télémétrique pour Gran Turismo 7 sur PS5.
 ## Utilisation
 
 ### Lancer le moteur (Mock)
-Pour tester le pipeline complet avec des données simulées :
+Pour tester le pipeline complet avec des données simulées (100 samples, pas un tour complet) :
 ```bash
 $env:PYTHONPATH="telemetry-engine"; python telemetry-engine/main.py
 ```
 
 ### Lancer le moteur (Real PS5)
-Pour écouter une vraie PS5 (nécessite d'être sur le même réseau) :
-```bash
-$env:PYTHONPATH="telemetry-engine"; python telemetry-engine/main.py --real
+
+PC et PS5 sur le même LAN. Définir l'IP de la console, puis lancer `--real` :
+
+```powershell
+$env:PYTHONPATH="telemetry-engine"
+$env:GT7_PS5_IP="192.168.1.42"
+python telemetry-engine/main.py --real
 ```
+
+Le collector :
+
+1. Bind UDP sur `0.0.0.0:33740` (paquets PS5 → PC).
+2. Envoie un heartbeat `A` vers `GT7_PS5_IP:33739` immédiatement, puis toutes les 2 s.
+3. Déchiffre chaque paquet (Salsa20, clé communautaire GT7).
+4. Enregistre tous les samples (pas de plafond à 100) et découpe les tours par wrap de distance.
+
+`GT7_PS5_IP` est obligatoire en `--real` et ne peut pas être `0.0.0.0`. Ctrl+C termine la session et sauvegarde le dernier tour.
 
 ### Lancer les tests
 ```bash
@@ -38,11 +51,10 @@ $env:PYTHONPATH="telemetry-engine"; python -m pytest telemetry-engine/tests/
 ```
 
 ## Fonctionnalités de Session
-- **Auto-détection de tours** : Le système détecte le passage sur la ligne d'arrivée via le reset de la distance totale parcourue.
-- **Validation** : Les tours trop courts ou sans assez de données sont marqués comme invalides.
-- **Stockage relationnel** : Les données sont organisées par Session -> Tours -> Échantillons.
+- **Auto-détection de tours** : passage de ligne via reset de la distance.
+- **Validation** : tours trop courts ou sans assez de données marqués invalides.
+- **Stockage relationnel** : Session -> Tours -> Échantillons.
 
 ## Prochaines étapes
-- Implémentation du "Heartbeat" UDP automatique pour réveiller la télémétrie GT7.
 - Détection automatique du circuit et de la voiture via les ID envoyés par GT7.
 - Interface API FastAPI pour visualiser les tours en temps réel.

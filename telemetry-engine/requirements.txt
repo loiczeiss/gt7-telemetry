@@ -3,3 +3,4 @@ pydantic
 sqlalchemy
 pytest
 uvicorn
+pycryptodome

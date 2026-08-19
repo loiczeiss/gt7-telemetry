@@ -39,7 +39,7 @@ def test_udp_flow():
         
         # Validation et décodage
         gt7_packet = GT7Packet(data)
-        sample = GT7Decoder.decode(gt7_packet.raw_data)
+        sample = GT7Decoder.decode(gt7_packet.raw_data, encrypted=False)
         
         assert len(data) == GT7_PACKET_SIZE
         assert pytest.approx(sample.speed) == 216.0

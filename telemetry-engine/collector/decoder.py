@@ -16,15 +16,23 @@ class GT7Decoder:
         speed_ms = struct.unpack_from("<f", packet_bytes, SPEED_OFFSET)[0]
         speed_kmh = speed_ms * 3.6
 
-        rpm = struct.unpack_from("<f", packet_bytes, RPM_OFFSET)[0]
+        rpm = struct.unpack_from("<f", packet_bytes, ENGINE_RPM_OFFSET)[0]
 
-        gear_raw = struct.unpack_from("<B", packet_bytes, GEAR_OFFSET)[0]
-        gear = gear_raw & 0x0F
+        gear_raw = struct.unpack_from("<B", packet_bytes, GEARS_OFFSET)[0]
+        gear = gear_raw & 0x0F  # 4 bits bas = rapport actuel
 
         throttle = struct.unpack_from("<B", packet_bytes, THROTTLE_OFFSET)[0]
         brake = struct.unpack_from("<B", packet_bytes, BRAKE_OFFSET)[0]
 
-        distance = struct.unpack_from("<f", packet_bytes, DISTANCE_OFFSET)[0]
+        lap_count = struct.unpack_from("<h", packet_bytes, LAP_COUNT_OFFSET)[0]
+
+        best_laptime_raw = struct.unpack_from("<i", packet_bytes, BEST_LAPTIME_OFFSET)[0]
+        best_laptime_ms = best_laptime_raw if best_laptime_raw >= 0 else None
+
+        # GT7 n'expose pas de "distance parcourue" ni de "steering" bruts
+        # dans ce paquet. On les laisse à 0/None pour l'instant plutôt que
+        # de lire un mauvais offset silencieusement — voir notes ci-dessous.
+        distance = 0.0
         steering = 0
 
         return TelemetrySample(
@@ -38,6 +46,8 @@ class GT7Decoder:
             steering=steering,
             position_x=pos_x,
             position_y=pos_y,
+            lap_count=lap_count,
+            best_laptime_ms=best_laptime_ms,
         )
 
     @staticmethod

@@ -1,13 +1,13 @@
 import os
 
-LISTEN_IP = os.environ.get("GT7_LISTEN_IP", "0.0.0.0")
+LISTEN_IP = os.environ.get("GT7_LISTEN_IP", "192.168.1.8")  # IP de CE PC, pas de la PS5
 LISTEN_PORT = int(os.environ.get("GT7_LISTEN_PORT", "33740"))
 GT7_IP = LISTEN_IP  # alias historique (bind)
 GT7_PORT = LISTEN_PORT
 BUFFER_SIZE = 1500
 RECV_TIMEOUT_S = 1.0
 
-PS5_IP = os.environ.get("GT7_PS5_IP", "")
+PS5_IP = os.environ.get("GT7_PS5_IP", "192.168.1.12")  # IP de la console
 HEARTBEAT_PORT = 33739
 HEARTBEAT_PAYLOAD = b"A"
 HEARTBEAT_INTERVAL_S = 2.0
@@ -17,11 +17,13 @@ SALSA20_IV_OFFSET = 0x40
 SALSA20_MAGIC = 0x47375330
 SALSA20_IV_XOR = 0xDEADBEAF  # orthographe du jeu, pas DEADBEEF
 
-# Configuration de la détection de tours
-TRACK_LENGTH = 5000.0  # Valeur par défaut, à adapter par circuit
-FINISH_LINE_START_PERCENTAGE = 0.95  # Zone de fin de tour (95%+)
-FINISH_LINE_END_PERCENTAGE = 0.05    # Zone de début de tour (0-5%)
-MIN_SPEED_FOR_LAP = 10.0            # Vitesse min en km/h pour valider un passage
+# Détection de tours : basée sur lap_count natif GT7 (voir LapDetector),
+# donc plus besoin de TRACK_LENGTH / FINISH_LINE_*_PERCENTAGE / MIN_SPEED_FOR_LAP.
+
+# Validation de tours (voir LapValidator) : durée min par rapport à
+# best_laptime_ms fourni par GT7, plus de dépendance à une distance.
+LAP_MIN_DURATION_PCT = 0.5
+LAP_MIN_SAMPLES = 10
 
 
 def require_ps5_ip(ps5_ip: str | None = None) -> str:

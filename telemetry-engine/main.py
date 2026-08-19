@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def main(use_mock=True):
+def main(use_mock=False):
     storage = SQLiteStorage()
 
     driver_id = "User1"

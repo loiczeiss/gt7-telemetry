@@ -32,7 +32,7 @@ PC et PS5 sur le même LAN. Définir l'IP de la console, puis lancer `--real` :
 
 ```powershell
 $env:PYTHONPATH="telemetry-engine"
-$env:GT7_PS5_IP="192.168.1.42"
+$env:GT7_PS5_IP="192.168.1.12"
 python telemetry-engine/main.py --real
 ```
 

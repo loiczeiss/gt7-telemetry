@@ -1,16 +1,19 @@
 from models.telemetry import TelemetrySample
 from models.events import LapEvent
 from typing import Optional, List
-import config
+
 
 class LapDetector:
     """
-    Détecteur de tours robuste basé sur la distance, la vitesse et les zones de ligne d'arrivée.
+    Détecteur de tours basé sur le compteur de tours natif GT7 (lap_count).
+    Plus fiable qu'une heuristique de franchissement de ligne basée sur la
+    distance : GT7 gère lui-même la détection de ligne d'arrivée et
+    incrémente lap_count en conséquence, donc on se contente de suivre
+    ce changement.
     Produit des LapEvent pour la couche supérieure.
     """
     def __init__(self):
         self.last_sample: Optional[TelemetrySample] = None
-        self.current_lap_number = 0
         self.is_initialized = False
 
     def process_sample(self, sample: TelemetrySample) -> List[LapEvent]:
@@ -18,12 +21,11 @@ class LapDetector:
 
         # 1. Initialisation au premier sample
         if not self.is_initialized:
-            self.current_lap_number = 1
             self.is_initialized = True
             self.last_sample = sample
             events.append(LapEvent(
                 event_type="LAP_STARTED",
-                lap_number=self.current_lap_number,
+                lap_number=sample.lap_count,
                 timestamp=sample.timestamp,
                 distance=sample.distance
             ))
@@ -34,32 +36,39 @@ class LapDetector:
             # On ignore les paquets en retard ou doublons
             return events
 
-        # 3. Détection passage ligne d'arrivée
-        # Condition : On passe de la fin du circuit (>95%) au début (<5%)
-        # ET on a une vitesse minimale pour éviter les détections à l'arrêt/reset
-        
-        in_finish_zone = self.last_sample.distance > (config.TRACK_LENGTH * config.FINISH_LINE_START_PERCENTAGE)
-        in_start_zone = sample.distance < (config.TRACK_LENGTH * config.FINISH_LINE_END_PERCENTAGE)
-        
-        # Cas spécifique GT7 : La distance peut aussi faire un saut direct (ex: 4990 -> 10)
-        # On vérifie si la distance a diminué de manière significative tout en étant dans les zones
-        
-        has_crossed_line = (self.last_sample.distance > sample.distance) and in_finish_zone and in_start_zone
-        
-        if has_crossed_line and sample.speed > config.MIN_SPEED_FOR_LAP:
-            # Événement : Tour complété
+        # 3. Détection de changement de tour via lap_count
+        # GT7 met lap_count à -1 (ou une valeur négative) hors course /
+        # avant le départ : on ignore ces transitions.
+        lap_increased = (
+            sample.lap_count > self.last_sample.lap_count
+            and self.last_sample.lap_count >= 0
+        )
+
+        if lap_increased:
+            # Événement : Tour complété (le tour qui vient de se terminer)
             events.append(LapEvent(
                 event_type="LAP_COMPLETED",
-                lap_number=self.current_lap_number,
-                timestamp=self.last_sample.timestamp,
+                lap_number=self.last_sample.lap_count,
+                timestamp=sample.timestamp,
                 distance=self.last_sample.distance
             ))
-            
+
             # Événement : Nouveau tour démarré
-            self.current_lap_number += 1
             events.append(LapEvent(
                 event_type="LAP_STARTED",
-                lap_number=self.current_lap_number,
+                lap_number=sample.lap_count,
+                timestamp=sample.timestamp,
+                distance=sample.distance
+            ))
+
+        # 4. Cas reset / retour aux stands / nouvelle session :
+        # lap_count qui redescend à 1 (ou à une valeur <= à l'actuelle)
+        # après avoir été plus haut. On le signale comme un nouveau départ
+        # plutôt que de le traiter comme une anomalie silencieuse.
+        elif sample.lap_count < self.last_sample.lap_count:
+            events.append(LapEvent(
+                event_type="LAP_STARTED",
+                lap_number=sample.lap_count,
                 timestamp=sample.timestamp,
                 distance=sample.distance
             ))

@@ -1,5 +1,5 @@
 import time
-from collector.gt7_offsets import GT7_PACKET_SIZE
+from collector.gt7_offsets import GT7_PACKETC_SIZE
 
 class GT7Packet:
     def __init__(self, raw_data: bytes):

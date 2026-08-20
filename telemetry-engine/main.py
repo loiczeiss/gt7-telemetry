@@ -8,7 +8,7 @@ from storage.sqlite import SQLiteStorage
 from session.session_manager import SessionManager
 from config import LISTEN_IP, LISTEN_PORT, PS5_IP, require_ps5_ip
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -17,9 +17,8 @@ def main(use_mock=False):
 
     driver_id = "User1"
 
-
     session_manager = SessionManager(storage, driver_id)
-    logger.info("Session démarrée : %s avec %s (ID: %s)", session_manager.session.id)
+    logger.info("Session démarrée : %s (ID: %s)", driver_id, session_manager.session.id)
 
     if use_mock:
         logger.info("Utilisation du simulateur de télémétrie")
@@ -43,11 +42,18 @@ def main(use_mock=False):
         try:
             while True:
                 data, _addr = listener.receive()
+                if data:
+                    with open("sample_packet.bin", "wb") as f:
+                        f.write(data)
                 if not data:
                     continue
                 sample = decoder.decode(data, encrypted=True)
                 if sample:
+                    logger.debug("lap_count=%s speed=%s", sample.lap_count, getattr(sample, "speed", None))
                     session_manager.process_sample(sample)
+                if not sample:
+                    logger.debug("decode() returned None for %d bytes", len(data))
+                    continue
         except KeyboardInterrupt:
             logger.info("Arrêt du collector...")
         finally:

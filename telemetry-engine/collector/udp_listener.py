@@ -3,7 +3,6 @@ import logging
 from typing import Optional, Tuple
 from config import BUFFER_SIZE, GT7_IP, GT7_PORT, RECV_TIMEOUT_S
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 

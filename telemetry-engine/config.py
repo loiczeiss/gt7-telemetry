@@ -14,8 +14,8 @@ HEARTBEAT_INTERVAL_S = 2.0
 
 SALSA20_KEY = b"Simulator Interface Packet GT7 ver 0.0"[:32]  # Salsa20 exige 32 octets
 SALSA20_IV_OFFSET = 0x40
-SALSA20_MAGIC = 0x47375330
-SALSA20_IV_XOR = 0xDEADBEAF  # orthographe du jeu, pas DEADBEEF
+SALSA20_MAGIC = 0x47375330       # back to your original value — this was correct
+SALSA20_IV_XOR = 0xDEADBEEF
 
 # Détection de tours : basée sur lap_count natif GT7 (voir LapDetector),
 # donc plus besoin de TRACK_LENGTH / FINISH_LINE_*_PERCENTAGE / MIN_SPEED_FOR_LAP.

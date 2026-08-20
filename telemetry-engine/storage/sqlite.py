@@ -14,6 +14,7 @@ class SessionDB(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
+    driver_id = Column(String)          # <-- missing, add this
     start_time = Column(DateTime)
     end_time = Column(DateTime, nullable=True)
     laps = relationship("LapDB", back_populates="session")
@@ -66,8 +67,6 @@ class SQLiteStorage:
         db_lap = LapDB(
             session_id=lap.session_id,
             lap_number=lap.lap_number,
-            start_distance=lap.start_distance,
-            end_distance=lap.end_distance,
             lap_time=lap.lap_time,
             valid=lap.valid,
             samples_count=lap.samples_count,

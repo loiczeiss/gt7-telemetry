@@ -1,5 +1,6 @@
+from typing import List, Optional
+from models.telemetry import TelemetrySample
 from pydantic import BaseModel, Field
-
 class Lap(BaseModel):
     id: Optional[int] = None
     session_id: Optional[int] = None

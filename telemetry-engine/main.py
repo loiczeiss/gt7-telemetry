@@ -16,11 +16,10 @@ def main(use_mock=False):
     storage = SQLiteStorage()
 
     driver_id = "User1"
-    track = "Trial Mountain"
-    car = "Toyota GR Yaris"
 
-    session_manager = SessionManager(storage, driver_id, track, car)
-    logger.info("Session démarrée : %s avec %s (ID: %s)", track, car, session_manager.session.id)
+
+    session_manager = SessionManager(storage, driver_id)
+    logger.info("Session démarrée : %s avec %s (ID: %s)", session_manager.session.id)
 
     if use_mock:
         logger.info("Utilisation du simulateur de télémétrie")

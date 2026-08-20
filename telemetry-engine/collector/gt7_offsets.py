@@ -1,141 +1,145 @@
 """
-Offsets pour les paquets telemetry GT7 (type A, paquet complet - 296 octets / 0x128)
+Offsets pour les paquets telemetry GT7 — format PacketC (340 octets / 0x154)
 
-Recalculés directement à partir du struct C++ `PacketA`, en respectant
-l'alignement naturel des types (float/int32 alignés sur 4 octets,
-int16 sur 2 octets, uint8 sur 1 octet). Le total tombe exactement sur
-0x128 (296 octets), ce qui confirme le layout.
+PacketC = PacketA + PacketB + champs spécifiques (surface, tour en cours,
+angle de braquage, empattement, catégorie voiture).
 
-Rappel : le paquet brut envoyé par la PS5 est chiffré en Salsa20.
-Il faut le déchiffrer AVANT de faire le parsing avec ces offsets.
+Rappel : le paquet brut est chiffré en Salsa20, à déchiffrer AVANT parsing.
 Voir le champ `iv` (0x40) qui sert de vecteur d'initialisation.
 """
 
 import struct
 
-# --- Général ---
-MAGIC_OFFSET = 0x00                # int32 - identifie le jeu
+# ============================================================
+# PacketA (0x00 -> 0x128, 296 octets) — inchangé
+# ============================================================
+MAGIC_OFFSET = 0x00
 
-# --- Position / mouvement ---
-POSITION_X_OFFSET = 0x04           # float (m)
-POSITION_Y_OFFSET = 0x08           # float (m)
-POSITION_Z_OFFSET = 0x0C           # float (m)
+POSITION_X_OFFSET = 0x04
+POSITION_Y_OFFSET = 0x08
+POSITION_Z_OFFSET = 0x0C
 
-VELOCITY_X_OFFSET = 0x10           # float (m/s)
-VELOCITY_Y_OFFSET = 0x14           # float (m/s)
-VELOCITY_Z_OFFSET = 0x18           # float (m/s)
+VELOCITY_X_OFFSET = 0x10
+VELOCITY_Y_OFFSET = 0x14
+VELOCITY_Z_OFFSET = 0x18
 
-ROTATION_PITCH_OFFSET = 0x1C       # float, range -1 -> 1
-ROTATION_YAW_OFFSET = 0x20         # float, range -1 -> 1
-ROTATION_ROLL_OFFSET = 0x24        # float, range -1 -> 1
+ROTATION_PITCH_OFFSET = 0x1C
+ROTATION_YAW_OFFSET = 0x20
+ROTATION_ROLL_OFFSET = 0x24
 
-ORIENTATION_TO_NORTH_OFFSET = 0x28 # float, 1.0 = nord, 0.0 = sud
+ORIENTATION_TO_NORTH_OFFSET = 0x28
 
-ANGULAR_VELOCITY_X_OFFSET = 0x2C   # float (rad/s)
-ANGULAR_VELOCITY_Y_OFFSET = 0x30   # float (rad/s)
-ANGULAR_VELOCITY_Z_OFFSET = 0x34   # float (rad/s)
+ANGULAR_VELOCITY_X_OFFSET = 0x2C
+ANGULAR_VELOCITY_Y_OFFSET = 0x30
+ANGULAR_VELOCITY_Z_OFFSET = 0x34
 
-BODY_HEIGHT_OFFSET = 0x38          # float
+BODY_HEIGHT_OFFSET = 0x38
+ENGINE_RPM_OFFSET = 0x3C
 
-# --- Moteur ---
-ENGINE_RPM_OFFSET = 0x3C           # float (PAS 0x2C comme dans la version précédente)
+IV_OFFSET = 0x40
 
-IV_OFFSET = 0x40                   # uint8[4] - IV Salsa20
+FUEL_LEVEL_OFFSET = 0x44
+FUEL_CAPACITY_OFFSET = 0x48
+SPEED_OFFSET = 0x4C
+BOOST_OFFSET = 0x50
+OIL_PRESSURE_OFFSET = 0x54
+WATER_TEMP_OFFSET = 0x58
+OIL_TEMP_OFFSET = 0x5C
 
-FUEL_LEVEL_OFFSET = 0x44           # float (litres)
-FUEL_CAPACITY_OFFSET = 0x48        # float (litres)
-
-SPEED_OFFSET = 0x4C                # float (m/s -> convertir en km/h : *3.6)
-
-BOOST_OFFSET = 0x50                # float, offset +1 (1.0 = 0x100kPa)
-
-OIL_PRESSURE_OFFSET = 0x54         # float (bar)
-WATER_TEMP_OFFSET = 0x58           # float (toujours 85 en pratique)
-OIL_TEMP_OFFSET = 0x5C             # float (toujours 110 en pratique)
-
-# --- Pneus ---
-TYRE_TEMP_FL_OFFSET = 0x60         # float (°C)
+TYRE_TEMP_FL_OFFSET = 0x60
 TYRE_TEMP_FR_OFFSET = 0x64
 TYRE_TEMP_RL_OFFSET = 0x68
 TYRE_TEMP_RR_OFFSET = 0x6C
 
-# --- Course / tour ---
-PACKET_ID_OFFSET = 0x70            # int32
-LAP_COUNT_OFFSET = 0x74            # int16
-TOTAL_LAPS_OFFSET = 0x76           # int16
-BEST_LAPTIME_OFFSET = 0x78         # int32 (ms), -1 si non défini
-LAST_LAPTIME_OFFSET = 0x7C         # int32 (ms), -1 si non défini
-DAY_PROGRESSION_OFFSET = 0x80      # int32 (ms)
+PACKET_ID_OFFSET = 0x70
+LAP_COUNT_OFFSET = 0x74
+TOTAL_LAPS_OFFSET = 0x76
+BEST_LAPTIME_OFFSET = 0x78
+LAST_LAPTIME_OFFSET = 0x7C
+DAY_PROGRESSION_OFFSET = 0x80
 
-RACE_START_POSITION_OFFSET = 0x84  # int16, -1 après le départ
-PRE_RACE_NUM_CARS_OFFSET = 0x86    # int16, -1 après le départ
+RACE_START_POSITION_OFFSET = 0x84
+PRE_RACE_NUM_CARS_OFFSET = 0x86
 
-MIN_ALERT_RPM_OFFSET = 0x88        # int16
-MAX_ALERT_RPM_OFFSET = 0x8A        # int16
-CALC_MAX_SPEED_OFFSET = 0x8C       # int16
+MIN_ALERT_RPM_OFFSET = 0x88
+MAX_ALERT_RPM_OFFSET = 0x8A
+CALC_MAX_SPEED_OFFSET = 0x8C
 
-FLAGS_OFFSET = 0x8E                # uint16 (bitfield SimulatorFlags)
+FLAGS_OFFSET = 0x8E
 
-# --- Pédales / rapport ---
-GEARS_OFFSET = 0x90                # uint8 : 4 bits bas = rapport actuel, 4 bits hauts = rapport suggéré
-THROTTLE_OFFSET = 0x91             # uint8 (0-255)
-BRAKE_OFFSET = 0x92                # uint8 (0-255)
-UNKNOWN_BYTE1_OFFSET = 0x93        # padding
+GEARS_OFFSET = 0x90
+THROTTLE_OFFSET = 0x91
+BRAKE_OFFSET = 0x92
+UNKNOWN_BYTE1_OFFSET = 0x93
 
-# --- Route / suspension ---
-ROAD_PLANE_X_OFFSET = 0x94         # float
-ROAD_PLANE_Y_OFFSET = 0x98         # float
-ROAD_PLANE_Z_OFFSET = 0x9C         # float
-ROAD_PLANE_DISTANCE_OFFSET = 0xA0  # float
+ROAD_PLANE_X_OFFSET = 0x94
+ROAD_PLANE_Y_OFFSET = 0x98
+ROAD_PLANE_Z_OFFSET = 0x9C
+ROAD_PLANE_DISTANCE_OFFSET = 0xA0
 
-WHEEL_RPS_FL_OFFSET = 0xA4         # float (rad/s)
+WHEEL_RPS_FL_OFFSET = 0xA4
 WHEEL_RPS_FR_OFFSET = 0xA8
 WHEEL_RPS_RL_OFFSET = 0xAC
 WHEEL_RPS_RR_OFFSET = 0xB0
 
-TYRE_RADIUS_FL_OFFSET = 0xB4       # float (m)
+TYRE_RADIUS_FL_OFFSET = 0xB4
 TYRE_RADIUS_FR_OFFSET = 0xB8
 TYRE_RADIUS_RL_OFFSET = 0xBC
 TYRE_RADIUS_RR_OFFSET = 0xC0
 
-SUSP_HEIGHT_FL_OFFSET = 0xC4       # float
+SUSP_HEIGHT_FL_OFFSET = 0xC4
 SUSP_HEIGHT_FR_OFFSET = 0xC8
 SUSP_HEIGHT_RL_OFFSET = 0xCC
 SUSP_HEIGHT_RR_OFFSET = 0xD0
 
-UNKNOWN_FLOATS_OFFSET = 0xD4       # float[8], inconnu, 32 octets (0xD4 -> 0xF3)
+UNKNOWN_FLOATS_OFFSET = 0xD4  # float[8], 32 octets
 
-# --- Embrayage / boîte ---
-CLUTCH_OFFSET = 0xF4                       # float (0.0 -> 1.0)
-CLUTCH_ENGAGEMENT_OFFSET = 0xF8            # float (0.0 -> 1.0)
-RPM_FROM_CLUTCH_TO_GEARBOX_OFFSET = 0xFC   # float
-TRANSMISSION_TOP_SPEED_OFFSET = 0x100      # float
+CLUTCH_OFFSET = 0xF4
+CLUTCH_ENGAGEMENT_OFFSET = 0xF8
+RPM_FROM_CLUTCH_TO_GEARBOX_OFFSET = 0xFC
+TRANSMISSION_TOP_SPEED_OFFSET = 0x100
 
-GEAR_RATIOS_OFFSET = 0x104         # float[8], 32 octets (0x104 -> 0x123)
+GEAR_RATIOS_OFFSET = 0x104  # float[8], 32 octets
 
-CAR_CODE_OFFSET = 0x124            # int32
+CAR_CODE_OFFSET = 0x124
 
-# Taille totale du paquet A (confirmée par le calcul du layout ci-dessus)
-GT7_PACKET_SIZE = 0x128  # 296 bytes
+# ============================================================
+# PacketB (0x128 -> 0x13C, +20 octets)
+# ============================================================
+PACKETB_WHEEL_ROTATION_OFFSET = 0x128              # float (rad)
+PACKETB_STEERING_ANGULAR_VELOCITY_OFFSET = 0x12C   # float (rad/s)
+PACKETB_SWAY_OFFSET = 0x130                        # float, accélération axe X
+PACKETB_HEAVE_OFFSET = 0x134                       # float, accélération axe Y
+PACKETB_SURGE_OFFSET = 0x138                        # float, accélération axe Z
+
+# ============================================================
+# PacketC (0x13C -> 0x154, +24 octets)
+# ============================================================
+PACKETC_SURFACE_TYPE_OFFSET = 0x13C                # char[4] : T=tarmac, C=curb, D=dirt, G=grass, S=Sand, s=snow,
+PACKETC_CURRENT_LAP_OFFSET = 0x140                 # int32 (ms)
+PACKETC_WHEEL_STEERING_ANGLE_LEFT_OFFSET = 0x144   # float (rad)
+PACKETC_WHEEL_STEERING_ANGLE_RIGHT_OFFSET = 0x148  # float (rad)
+PACKETC_WHEEL_BASE_OFFSET = 0x14C                  # float (m)
+PACKETC_CAR_CATEGORY_OFFSET = 0x150                # char[4], ex: "GR3\0"
+
+GT7_PACKETC_SIZE = 0x154  # 340 octets — taille totale attendue
 
 
 def get_current_gear(gears_byte: int) -> int:
-    """4 bits bas = rapport actuel."""
     return gears_byte & 0x0F
 
 
 def get_suggested_gear(gears_byte: int) -> int:
-    """4 bits hauts = rapport suggéré."""
     return (gears_byte >> 4) & 0x0F
 
 
-def parse_packet(data: bytes) -> dict:
+def parse_packet_c(data: bytes) -> dict:
     """
-    Parse un paquet GT7 DÉCHIFFRÉ (Salsa20 déjà appliqué) de 296 octets.
-    Retourne un dict avec les valeurs principales.
+    Parse un paquet GT7 DÉCHIFFRÉ (Salsa20 déjà appliqué) au format PacketC
+    (340 octets). Inclut tous les champs hérités de PacketA et PacketB.
     """
-    if len(data) < GT7_PACKET_SIZE:
-        raise ValueError(f"Paquet trop court : {len(data)} octets (attendu {GT7_PACKET_SIZE})")
+    if len(data) < GT7_PACKETC_SIZE:
+        raise ValueError(f"Paquet trop court : {len(data)} octets (attendu {GT7_PACKETC_SIZE})")
 
     def f(offset):
         return struct.unpack_from('<f', data, offset)[0]
@@ -149,9 +153,13 @@ def parse_packet(data: bytes) -> dict:
     def u8(offset):
         return struct.unpack_from('<B', data, offset)[0]
 
+    def s4(offset):
+        return data[offset:offset + 4].split(b'\x00', 1)[0].decode('ascii', errors='replace')
+
     gears_byte = u8(GEARS_OFFSET)
 
     return {
+        # --- PacketA ---
         "magic": i32(MAGIC_OFFSET),
         "position": (f(POSITION_X_OFFSET), f(POSITION_Y_OFFSET), f(POSITION_Z_OFFSET)),
         "velocity": (f(VELOCITY_X_OFFSET), f(VELOCITY_Y_OFFSET), f(VELOCITY_Z_OFFSET)),
@@ -180,4 +188,21 @@ def parse_packet(data: bytes) -> dict:
         "clutch": f(CLUTCH_OFFSET),
         "clutch_engagement": f(CLUTCH_ENGAGEMENT_OFFSET),
         "car_code": i32(CAR_CODE_OFFSET),
+
+        # --- PacketB ---
+        "wheel_rotation": f(PACKETB_WHEEL_ROTATION_OFFSET),
+        "steering_angular_velocity": f(PACKETB_STEERING_ANGULAR_VELOCITY_OFFSET),
+        "sway": f(PACKETB_SWAY_OFFSET),
+        "heave": f(PACKETB_HEAVE_OFFSET),
+        "surge": f(PACKETB_SURGE_OFFSET),
+
+        # --- PacketC ---
+        "surface_type": s4(PACKETC_SURFACE_TYPE_OFFSET),
+        "current_lap_ms": i32(PACKETC_CURRENT_LAP_OFFSET),
+        "wheel_steering_angle": (
+            f(PACKETC_WHEEL_STEERING_ANGLE_LEFT_OFFSET),
+            f(PACKETC_WHEEL_STEERING_ANGLE_RIGHT_OFFSET),
+        ),
+        "wheel_base": f(PACKETC_WHEEL_BASE_OFFSET),
+        "car_category": s4(PACKETC_CAR_CATEGORY_OFFSET),
     }

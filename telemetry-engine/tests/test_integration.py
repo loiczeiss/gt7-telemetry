@@ -33,7 +33,7 @@ def test_pipeline_integration():
     
     # 5. Recharger le tour
     # On crée d'abord une session pour que get_session fonctionne (ou on teste directement save_lap)
-    session_id = storage.save_session(Session(driver_id="Test", track="Test", car="Test", start_time=datetime.now()))
+    session_id = storage.save_session(Session(driver_id="Test", start_time=datetime.now()))
     lap.session_id = session_id
     storage.save_lap(lap)
     

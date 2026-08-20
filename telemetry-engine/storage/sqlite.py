@@ -14,12 +14,8 @@ class SessionDB(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    driver_id = Column(String)
-    track = Column(String)
-    car = Column(String)
     start_time = Column(DateTime)
     end_time = Column(DateTime, nullable=True)
-    
     laps = relationship("LapDB", back_populates="session")
 
 class LapDB(Base):
@@ -28,8 +24,6 @@ class LapDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("sessions.id"))
     lap_number = Column(Integer)
-    start_distance = Column(Float)
-    end_distance = Column(Float, nullable=True)
     lap_time = Column(Float, nullable=True)
     valid = Column(Boolean, default=True)
     samples_count = Column(Integer, default=0)
@@ -47,8 +41,6 @@ class SQLiteStorage:
         db = self.SessionLocal()
         db_session = SessionDB(
             driver_id=session.driver_id,
-            track=session.track,
-            car=session.car,
             start_time=session.start_time,
             end_time=session.end_time
         )
@@ -113,8 +105,6 @@ class SQLiteStorage:
         session = PydanticSession(
             id=db_session.id,
             driver_id=db_session.driver_id,
-            track=db_session.track,
-            car=db_session.car,
             start_time=db_session.start_time,
             end_time=db_session.end_time,
             laps=laps

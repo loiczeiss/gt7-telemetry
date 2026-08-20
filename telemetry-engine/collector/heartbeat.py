@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class HeartbeatSender:
-    """Envoie périodiquement b'A' vers la PS5 (port 33739) pour maintenir le flux GT7."""
+    """Envoie périodiquement b'C' vers la PS5 (port 33739) pour maintenir le flux GT7."""
 
     def __init__(
         self,

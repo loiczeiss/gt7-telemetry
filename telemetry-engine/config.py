@@ -9,7 +9,7 @@ RECV_TIMEOUT_S = 1.0
 
 PS5_IP = os.environ.get("GT7_PS5_IP", "192.168.1.12")  # IP de la console
 HEARTBEAT_PORT = 33739
-HEARTBEAT_PAYLOAD = b"A"
+HEARTBEAT_PAYLOAD = b"C"
 HEARTBEAT_INTERVAL_S = 2.0
 
 SALSA20_KEY = b"Simulator Interface Packet GT7 ver 0.0"[:32]  # Salsa20 exige 32 octets

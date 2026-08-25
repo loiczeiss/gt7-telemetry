@@ -41,7 +41,7 @@ Le collector :
 1. Bind UDP sur `0.0.0.0:33740` (paquets PS5 → PC).
 2. Envoie un heartbeat `A` vers `GT7_PS5_IP:33739` immédiatement, puis toutes les 2 s.
 3. Déchiffre chaque paquet (Salsa20, clé communautaire GT7).
-4. Enregistre tous les samples (pas de plafond à 100) et découpe les tours par wrap de distance.
+4. Enregistre tous les samples (pas de plafond à 100) et découpe les tours avec `lap_count` fourni par GT7.
 
 `GT7_PS5_IP` est obligatoire en `--real` et ne peut pas être `0.0.0.0`. Ctrl+C termine la session et sauvegarde le dernier tour.
 
@@ -51,7 +51,7 @@ $env:PYTHONPATH="telemetry-engine"; python -m pytest telemetry-engine/tests/
 ```
 
 ## Fonctionnalités de Session
-- **Auto-détection de tours** : passage de ligne via reset de la distance.
+- **Détection de tours** : transitions du compteur `lap_count` fourni par GT7.
 - **Validation** : tours trop courts ou sans assez de données marqués invalides.
 - **Stockage relationnel** : Session -> Tours -> Échantillons.
 

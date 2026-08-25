@@ -19,7 +19,11 @@ class GT7Decoder:
         f = lambda off: struct.unpack_from("<f", packet_bytes, off)[0]
         i32 = lambda off: struct.unpack_from("<i", packet_bytes, off)[0]
         i16 = lambda off: struct.unpack_from("<h", packet_bytes, off)[0]
+        u16 = lambda off: struct.unpack_from("<H", packet_bytes, off)[0]
         u8 = lambda off: struct.unpack_from("<B", packet_bytes, off)[0]
+
+        def floats(offset: int, count: int) -> list[float]:
+            return list(struct.unpack_from(f"<{count}f", packet_bytes, offset))
 
         # --- Position / mouvement ---
         pos_x, pos_y, pos_z = f(POSITION_X_OFFSET), f(POSITION_Y_OFFSET), f(POSITION_Z_OFFSET)
@@ -80,6 +84,8 @@ class GT7Decoder:
         return TelemetrySample(
             timestamp=time.time(),
             packet_id=packet_id,
+            magic=i32(MAGIC_OFFSET),
+            iv=list(packet_bytes[IV_OFFSET:IV_OFFSET + 4]),
             position_x=pos_x,
             position_y=pos_y,
             position_z=pos_z,
@@ -113,6 +119,48 @@ class GT7Decoder:
             surface_type=surface_type,
             car_category=car_category,
             car_code=car_code,
+            rotation_pitch=f(ROTATION_PITCH_OFFSET),
+            rotation_yaw=f(ROTATION_YAW_OFFSET),
+            rotation_roll=f(ROTATION_ROLL_OFFSET),
+            orientation_to_north=f(ORIENTATION_TO_NORTH_OFFSET),
+            angular_velocity_x=f(ANGULAR_VELOCITY_X_OFFSET),
+            angular_velocity_y=f(ANGULAR_VELOCITY_Y_OFFSET),
+            angular_velocity_z=f(ANGULAR_VELOCITY_Z_OFFSET),
+            body_height=f(BODY_HEIGHT_OFFSET),
+            day_progression=f(DAY_PROGRESSION_OFFSET),
+            race_start_position=u16(RACE_START_POSITION_OFFSET),
+            pre_race_num_cars=u16(PRE_RACE_NUM_CARS_OFFSET),
+            min_alert_rpm=u16(MIN_ALERT_RPM_OFFSET),
+            max_alert_rpm=u16(MAX_ALERT_RPM_OFFSET),
+            calc_max_speed=f(CALC_MAX_SPEED_OFFSET),
+            flags=u16(FLAGS_OFFSET),
+            unknown_byte1=u8(UNKNOWN_BYTE1_OFFSET),
+            road_plane_x=f(ROAD_PLANE_X_OFFSET),
+            road_plane_y=f(ROAD_PLANE_Y_OFFSET),
+            road_plane_z=f(ROAD_PLANE_Z_OFFSET),
+            road_plane_distance=f(ROAD_PLANE_DISTANCE_OFFSET),
+            wheel_rps_fl=f(WHEEL_RPS_FL_OFFSET),
+            wheel_rps_fr=f(WHEEL_RPS_FR_OFFSET),
+            wheel_rps_rl=f(WHEEL_RPS_RL_OFFSET),
+            wheel_rps_rr=f(WHEEL_RPS_RR_OFFSET),
+            tyre_radius_fl=f(TYRE_RADIUS_FL_OFFSET),
+            tyre_radius_fr=f(TYRE_RADIUS_FR_OFFSET),
+            tyre_radius_rl=f(TYRE_RADIUS_RL_OFFSET),
+            tyre_radius_rr=f(TYRE_RADIUS_RR_OFFSET),
+            susp_height_fl=f(SUSP_HEIGHT_FL_OFFSET),
+            susp_height_fr=f(SUSP_HEIGHT_FR_OFFSET),
+            susp_height_rl=f(SUSP_HEIGHT_RL_OFFSET),
+            susp_height_rr=f(SUSP_HEIGHT_RR_OFFSET),
+            unknown_floats=floats(UNKNOWN_FLOATS_OFFSET, 8),
+            clutch_engagement=f(CLUTCH_ENGAGEMENT_OFFSET),
+            rpm_from_clutch_to_gearbox=f(RPM_FROM_CLUTCH_TO_GEARBOX_OFFSET),
+            transmission_top_speed=f(TRANSMISSION_TOP_SPEED_OFFSET),
+            gear_ratios=floats(GEAR_RATIOS_OFFSET, 8),
+            wheel_rotation=f(PACKETB_WHEEL_ROTATION_OFFSET),
+            steering_angular_velocity=f(PACKETB_STEERING_ANGULAR_VELOCITY_OFFSET),
+            sway=f(PACKETB_SWAY_OFFSET),
+            heave=f(PACKETB_HEAVE_OFFSET),
+            surge=f(PACKETB_SURGE_OFFSET),
         )
 
     @staticmethod

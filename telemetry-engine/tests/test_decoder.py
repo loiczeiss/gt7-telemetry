@@ -20,8 +20,8 @@ def test_decoder_basic():
     # Throttle = 200, Brake = 50
     struct.pack_into('<B', packet, THROTTLE_OFFSET, 200)
     struct.pack_into('<B', packet, BRAKE_OFFSET, 50)
-    # Distance = 1000.0
-    struct.pack_into('<f', packet, DISTANCE_OFFSET, 1000.0)
+    # Road-plane distance is telemetry metadata, not a lap counter.
+    struct.pack_into('<f', packet, ROAD_PLANE_DISTANCE_OFFSET, 1000.0)
     
     # Décodage
     sample = GT7Decoder.decode(bytes(packet), encrypted=False)
@@ -32,6 +32,6 @@ def test_decoder_basic():
     assert pytest.approx(sample.speed) == 180.0
     assert pytest.approx(sample.rpm) == 7500.0
     assert sample.gear == 4
-    assert sample.throttle == 200
-    assert sample.brake == 50
-    assert pytest.approx(sample.distance) == 1000.0
+    assert pytest.approx(sample.throttle) == 200 / 255
+    assert pytest.approx(sample.brake) == 50 / 255
+    assert pytest.approx(sample.road_plane_distance) == 1000.0

@@ -124,6 +124,11 @@ PACKETC_CAR_CATEGORY_OFFSET = 0x150                # char[4], ex: "GR3\0"
 
 GT7_PACKETC_SIZE = 0x154  # 340 octets — taille totale attendue
 
+# Backwards-compatible names used by the original decoder tests.
+GT7_PACKET_SIZE = GT7_PACKETC_SIZE
+RPM_OFFSET = ENGINE_RPM_OFFSET
+GEAR_OFFSET = GEARS_OFFSET
+
 
 def get_current_gear(gears_byte: int) -> int:
     return gears_byte & 0x0F
@@ -161,8 +166,13 @@ def parse_packet_c(data: bytes) -> dict:
     return {
         # --- PacketA ---
         "magic": i32(MAGIC_OFFSET),
+        "iv": list(data[IV_OFFSET:IV_OFFSET + 4]),
         "position": (f(POSITION_X_OFFSET), f(POSITION_Y_OFFSET), f(POSITION_Z_OFFSET)),
         "velocity": (f(VELOCITY_X_OFFSET), f(VELOCITY_Y_OFFSET), f(VELOCITY_Z_OFFSET)),
+        "rotation": (f(ROTATION_PITCH_OFFSET), f(ROTATION_YAW_OFFSET), f(ROTATION_ROLL_OFFSET)),
+        "orientation_to_north": f(ORIENTATION_TO_NORTH_OFFSET),
+        "angular_velocity": (f(ANGULAR_VELOCITY_X_OFFSET), f(ANGULAR_VELOCITY_Y_OFFSET), f(ANGULAR_VELOCITY_Z_OFFSET)),
+        "body_height": f(BODY_HEIGHT_OFFSET),
         "speed_kmh": f(SPEED_OFFSET) * 3.6,
         "engine_rpm": f(ENGINE_RPM_OFFSET),
         "fuel_level": f(FUEL_LEVEL_OFFSET),
@@ -181,12 +191,44 @@ def parse_packet_c(data: bytes) -> dict:
         "total_laps": i16(TOTAL_LAPS_OFFSET),
         "best_laptime_ms": i32(BEST_LAPTIME_OFFSET),
         "last_laptime_ms": i32(LAST_LAPTIME_OFFSET),
+        "day_progression": f(DAY_PROGRESSION_OFFSET),
+        "race_start_position": i16(RACE_START_POSITION_OFFSET),
+        "pre_race_num_cars": i16(PRE_RACE_NUM_CARS_OFFSET),
+        "min_alert_rpm": i16(MIN_ALERT_RPM_OFFSET),
+        "max_alert_rpm": i16(MAX_ALERT_RPM_OFFSET),
+        "calc_max_speed": f(CALC_MAX_SPEED_OFFSET),
+        "flags": i16(FLAGS_OFFSET),
         "current_gear": get_current_gear(gears_byte),
         "suggested_gear": get_suggested_gear(gears_byte),
         "throttle": u8(THROTTLE_OFFSET) / 255.0,
         "brake": u8(BRAKE_OFFSET) / 255.0,
+        "unknown_byte1": u8(UNKNOWN_BYTE1_OFFSET),
+        "road_plane": (f(ROAD_PLANE_X_OFFSET), f(ROAD_PLANE_Y_OFFSET), f(ROAD_PLANE_Z_OFFSET)),
+        "road_plane_distance": f(ROAD_PLANE_DISTANCE_OFFSET),
+        "wheel_rps": {
+            "FL": f(WHEEL_RPS_FL_OFFSET),
+            "FR": f(WHEEL_RPS_FR_OFFSET),
+            "RL": f(WHEEL_RPS_RL_OFFSET),
+            "RR": f(WHEEL_RPS_RR_OFFSET),
+        },
+        "tyre_radius": {
+            "FL": f(TYRE_RADIUS_FL_OFFSET),
+            "FR": f(TYRE_RADIUS_FR_OFFSET),
+            "RL": f(TYRE_RADIUS_RL_OFFSET),
+            "RR": f(TYRE_RADIUS_RR_OFFSET),
+        },
+        "susp_height": {
+            "FL": f(SUSP_HEIGHT_FL_OFFSET),
+            "FR": f(SUSP_HEIGHT_FR_OFFSET),
+            "RL": f(SUSP_HEIGHT_RL_OFFSET),
+            "RR": f(SUSP_HEIGHT_RR_OFFSET),
+        },
+        "unknown_floats": list(struct.unpack_from('<8f', data, UNKNOWN_FLOATS_OFFSET)),
         "clutch": f(CLUTCH_OFFSET),
         "clutch_engagement": f(CLUTCH_ENGAGEMENT_OFFSET),
+        "rpm_from_clutch_to_gearbox": f(RPM_FROM_CLUTCH_TO_GEARBOX_OFFSET),
+        "transmission_top_speed": f(TRANSMISSION_TOP_SPEED_OFFSET),
+        "gear_ratios": list(struct.unpack_from('<8f', data, GEAR_RATIOS_OFFSET)),
         "car_code": i32(CAR_CODE_OFFSET),
 
         # --- PacketB ---

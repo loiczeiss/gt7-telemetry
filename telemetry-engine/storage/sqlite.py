@@ -93,8 +93,6 @@ class SQLiteStorage:
                 id=db_lap.id,
                 session_id=db_lap.session_id,
                 lap_number=db_lap.lap_number,
-                start_distance=db_lap.start_distance,
-                end_distance=db_lap.end_distance,
                 lap_time=db_lap.lap_time,
                 valid=db_lap.valid,
                 samples_count=db_lap.samples_count,

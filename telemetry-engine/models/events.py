@@ -5,5 +5,4 @@ class LapEvent(BaseModel):
     event_type: str  # LAP_STARTED, LAP_COMPLETED, LAP_INVALID
     lap_number: int
     timestamp: float
-    # distance: float
     metadata: Optional[dict[str, Any]] = None

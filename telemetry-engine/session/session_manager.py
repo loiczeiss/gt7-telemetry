@@ -7,6 +7,7 @@ from models.session import Session
 from session.lap_detector import LapDetector
 from session.lap_validator import LapValidator
 from storage.sqlite import SQLiteStorage
+from collector.car_catalog import get_car_info, format_car_name
 
 
 class SessionManager:
@@ -66,6 +67,15 @@ class SessionManager:
             return
 
         events = self.lap_detector.process_sample(sample)
+
+        if self.session.car_code is None and sample.car_code:
+            car_info = get_car_info(sample.car_code)
+            self.session.car_code = sample.car_code
+            self.session.car_name = format_car_name(sample.car_code)
+            self.session.manufacturer_id = (
+                car_info.manufacturer_id if car_info else None
+            )
+            self.storage.update_session(self.session)
 
         for event in events:
 

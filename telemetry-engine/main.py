@@ -61,7 +61,12 @@ def main(use_mock=False):
             listener.stop()
 
     session_manager.end_session()
-    logger.info("Session terminée. %s tours enregistrés.", len(session_manager.session.laps))
+    logger.info(
+        "Session terminée. %s tours enregistrés. Véhicule: %s (code %s).",
+        len(session_manager.session.laps),
+        session_manager.session.car_name or "Unknown",
+        session_manager.session.car_code or "-",
+    )
     storage.close()
 
 

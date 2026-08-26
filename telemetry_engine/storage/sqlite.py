@@ -175,6 +175,51 @@ class SQLiteStorage:
 
         return lap_id
 
+    def get_sessions(self) -> list[PydanticSession]:
+        db = self.SessionLocal()
+
+        db_sessions = db.query(SessionDB).all()
+
+        sessions = []
+
+        for db_session in db_sessions:
+            laps = []
+
+            for db_lap in db_session.laps:
+                samples = [
+                    TelemetrySample(**sample)
+                    for sample in (db_lap.samples or [])
+                ]
+
+                laps.append(
+                    PydanticLap(
+                        id=db_lap.id,
+                        session_id=db_lap.session_id,
+                        lap_number=db_lap.lap_number,
+                        lap_time=db_lap.lap_time,
+                        valid=db_lap.valid,
+                        samples_count=db_lap.samples_count,
+                        samples=samples,
+                    )
+                )
+
+            sessions.append(
+                PydanticSession(
+                    id=db_session.id,
+                    driver_id=db_session.driver_id,
+                    car_code=db_session.car_code,
+                    car_name=db_session.car_name,
+                    manufacturer_id=db_session.manufacturer_id,
+                    start_time=db_session.start_time,
+                    end_time=db_session.end_time,
+                    laps=laps,
+                )
+            )
+
+        db.close()
+
+        return sessions
+    
     def get_session(
         self,
         session_id: int,
@@ -229,6 +274,68 @@ class SQLiteStorage:
         db.close()
 
         return session
+
+    def get_laps(self) -> list[PydanticLap]:
+        db = self.SessionLocal()
+
+        db_laps = db.query(LapDB).all()
+
+        laps = []
+
+        for db_lap in db_laps:
+            samples = [
+                TelemetrySample(**sample)
+                for sample in (db_lap.samples or [])
+            ]
+
+            laps.append(
+                PydanticLap(
+                    id=db_lap.id,
+                    session_id=db_lap.session_id,
+                    lap_number=db_lap.lap_number,
+                    lap_time=db_lap.lap_time,
+                    valid=db_lap.valid,
+                    samples_count=db_lap.samples_count,
+                    samples=samples,
+                )
+            )
+
+        db.close()
+
+        return laps
+
+    def get_lap(self, lap_id: int) -> Optional[PydanticLap]:
+        db = self.SessionLocal()
+
+        db_lap = (
+            db.query(LapDB)
+            .filter(LapDB.id == lap_id)
+            .first()
+        )
+
+        if not db_lap:
+            db.close()
+            print(f"Lap {lap_id} not found")
+            return None
+
+        samples = [
+            TelemetrySample(**sample)
+            for sample in (db_lap.samples or [])
+        ]
+
+        lap = PydanticLap(
+            id=db_lap.id,
+            session_id=db_lap.session_id,
+            lap_number=db_lap.lap_number,
+            lap_time=db_lap.lap_time,
+            valid=db_lap.valid,
+            samples_count=db_lap.samples_count,
+            samples=samples,
+        )
+
+        db.close()
+
+        return lap
 
     def close(self):
         self.engine.dispose()

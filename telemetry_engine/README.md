@@ -8,6 +8,7 @@ Moteur d'analyse télémétrique pour Gran Turismo 7 sur PS5.
 - `models/` : Modèles de données Pydantic (Session, Lap, TelemetrySample).
 - `session/` : Logique métier (détection de tours, validation, gestion de session).
 - `storage/` : Gestion de la persistance (SQLite relationnel).
+- `api/` : API FastAPI pour consulter les sessions et les tours enregistrés.
 - `tests/` : Tests automatisés.
 
 ## Installation
@@ -15,14 +16,14 @@ Moteur d'analyse télémétrique pour Gran Turismo 7 sur PS5.
 1. Assurez-vous d'avoir Python 3.12+ installé.
 2. Installez les dépendances :
    ```bash
-   pip install -r telemetry-engine/requirements.txt
+   pip install -r telemetry_engine/requirements.txt
    ```
 
-Depuis la racine du projet, le moteur Python utilise `telemetry-engine` comme
+Depuis la racine du projet, le moteur Python utilise `telemetry_engine` comme
 racine d'import. Dans PowerShell :
 
 ```powershell
-$env:PYTHONPATH="telemetry-engine"
+$env:PYTHONPATH="telemetry_engine"
 ```
 
 ## Workflow de test
@@ -32,13 +33,13 @@ Le mode mock permet de tester le pipeline localement sans PS5. Il génère 100
 persiste la session dans SQLite :
 
 ```bash
-python telemetry-engine/main.py
+python telemetry_engine/main.py
 ```
 
 Pour lancer les tests automatisés :
 
 ```powershell
-python -m pytest telemetry-engine/tests/ -q
+python -m pytest telemetry_engine/tests/ -q
 ```
 
 Les tests couvrent notamment le déchiffrement Salsa20, le décodage des
@@ -55,8 +56,8 @@ IP de la console et, si nécessaire, l'adresse locale du PC :
 ```powershell
 $env:GT7_PS5_IP="192.168.1.12"
 $env:GT7_LISTEN_IP="192.168.1.8"
-$env:PYTHONPATH="telemetry-engine"
-python telemetry-engine/main.py --real
+$env:PYTHONPATH="telemetry_engine"
+python telemetry_engine/main.py --real
 ```
 
 Le flux réel fonctionne ainsi :
@@ -97,10 +98,43 @@ La fin de session avec Ctrl+C clôture également le tour en cours à partir du
 dernier timestamp valide. Le stockage suit la relation :
 `Session -> Lap -> TelemetrySample`.
 
+## API HTTP
+
+L'API est implémentée avec FastAPI et lit la même base SQLite que le moteur
+(`telemetry.db` à la racine du projet). Démarrez-la depuis la racine du projet
+avec l'environnement virtuel activé :
+
+```powershell
+$env:PYTHONPATH="telemetry_engine"
+uvicorn api.main:app --app-dir telemetry_engine --reload
+```
+
+Elle est alors accessible à l'adresse `http://127.0.0.1:8000`. La
+documentation interactive Swagger UI est disponible sur
+`http://127.0.0.1:8000/docs` et la documentation OpenAPI sur
+`http://127.0.0.1:8000/openapi.json`.
+
+Endpoints actuellement disponibles :
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| `GET` | `/api/sessions/{session_id}` | Retourne une session avec ses tours et samples. |
+| `GET` | `/api/laps/{lap_id}` | Retourne un tour avec ses samples. |
+
+Exemples :
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/sessions/1
+Invoke-RestMethod http://127.0.0.1:8000/api/laps/1
+```
+
+Lancez le collector et l'API dans deux terminaux séparés pour alimenter la
+base pendant les requêtes. Le collector mock peut d'abord créer des données
+locales avec `python telemetry_engine/main.py`.
+
 ## Prochaines étapes
 
-- Ajouter une API FastAPI pour consulter les sessions, les tours et les samples
-   en temps réel.
+- Ajouter une route pour lister les sessions et les tours.
 - Enrichir les métadonnées de session avec le circuit et le véhicule identifiés
    à partir de `car_code` et `car_category`.
 - Ajouter des outils d'analyse des tours: comparaison des temps, secteurs et

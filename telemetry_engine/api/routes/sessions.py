@@ -10,9 +10,9 @@ router = APIRouter(
 storage = SQLiteStorage()
 
 
-# @router.get("/")
-# def get_sessions():
-#     return storage.get_sessions()
+@router.get("/")
+def get_sessions():
+    return storage.get_sessions()
 
 @router.get("/{session_id}")
 def get_session(session_id: int):
